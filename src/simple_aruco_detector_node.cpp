@@ -101,7 +101,7 @@ void callback(const ImageConstPtr &image_msg) {
 
     // Show image if no markers are detected
     if (ids.empty()) {
-        ROS_INFO("Target markers not found");
+        ROS_INFO("Markers not found");
         if (show_detections) {
             imshow("markers", image);
             auto key = waitKey(1);

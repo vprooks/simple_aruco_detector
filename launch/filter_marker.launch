@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+    <node pkg="simple_aruco_detector" type="marker_filter.py" name="aruco_marker_filter" output="screen">
+        <!-- Blending ratio, parameter of the running average filter -->
+        <param name="alpha" type="double" value="0.9"/>
+        <!-- Name of the marker to be filtered -->
+        <param name="marker_id" type="string" value="marker_id0"/>
+        <!-- Frame id of the marker's parent -->
+        <param name="parent_frame_id" type="string" value="kinect2_link"/>
+        <!-- Name of the filtered marker -->
+        <param name="marker_filtered_id" type="string" value="marker_id0_filtered"/>
+        <!-- TF publish rate, Hz -->
+        <param name="rate" type="double" value="125"/>
+    </node>
+</launch>
+
