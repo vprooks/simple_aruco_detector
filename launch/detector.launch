@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+    <node pkg="simple_aruco_detector" type="node" name="simple_aruco_detector" output="screen">
+        <param name="camera" type="string" value="/kinect2/hd/image_color_rect"/>
+        <param name="camera_info" type="string" value="/kinect2/hd/camera_info"/>
+        <param name="tf_prefix" type="string" value="marker_id"/>
+        <param name="show_detections" type="bool" value="true"/>
+        <!-- marker_size is length of the marker's side in meters -->
+        <param name="marker_size" type="double" value="0.09"/>
+        <param name="dictionary_name" type="string" value="DICT_4X4_50"/>
+    </node>
+</launch>
