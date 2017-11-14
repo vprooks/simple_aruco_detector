@@ -144,7 +144,7 @@ void callback(const ImageConstPtr &image_msg) {
         tf_msg.header.stamp = stamp;
         tf_msg.header.frame_id = frame_id;
         stringstream ss;
-        ss << marker_tf_prefix << i;
+        ss << marker_tf_prefix << ids[i];
         tf_msg.child_frame_id = ss.str();
         tf_msg.transform.translation.x = transform.getOrigin().getX();
         tf_msg.transform.translation.y = transform.getOrigin().getY();
