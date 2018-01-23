@@ -194,7 +194,7 @@ int main(int argc, char **argv) {
 
     // Configure ARUCO marker detector
     detector_params = aruco::DetectorParameters::create();
-    detector_params->doCornerRefinement = true;
+    detector_params->cornerRefinementMethod = aruco::CORNER_REFINE_SUBPIX;
     detector_params->adaptiveThreshWinSizeStep = 50;
     dictionary = aruco::getPredefinedDictionary(dictionary_names[dictionary_name]);
     ROS_DEBUG("%f", marker_size);
