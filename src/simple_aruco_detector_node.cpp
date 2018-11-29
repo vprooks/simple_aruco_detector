@@ -23,6 +23,7 @@
 // OpenCV
 #include <opencv2/highgui.hpp>
 #include <opencv2/aruco.hpp>
+#include <opencv2/imgproc.hpp>
 
 using namespace std;
 using namespace sensor_msgs;
@@ -31,7 +32,6 @@ using namespace cv;
 // Define global variables
 bool camera_model_computed = false;
 bool show_detections;
-bool terminate_flag = false;
 float marker_size;
 image_geometry::PinholeCameraModel camera_model;
 Mat distortion_coefficients;
@@ -39,12 +39,15 @@ Matx33d intrinsic_matrix;
 Ptr<aruco::DetectorParameters> detector_params;
 Ptr<cv::aruco::Dictionary> dictionary;
 string marker_tf_prefix;
+int blur_window_size = 7;
+bool enable_blur = true;
 
 void int_handler(int x) {
     // disconnect and exit gracefully
     if (show_detections) {
         cv::destroyAllWindows();
     }
+    ros::shutdown();
     exit(0);
 }
 
@@ -93,6 +96,13 @@ void callback(const ImageConstPtr &image_msg) {
 
     string frame_id = image_msg->header.frame_id;
     auto image = cv_bridge::toCvShare(image_msg)->image;
+    cv::Mat display_image(image);
+
+    // Smooth the image to improve detection results
+    if (enable_blur) {
+        GaussianBlur(image, image, Size(blur_window_size, blur_window_size), 0,
+                     0);
+    }
 
     // Detect the markers
     vector<int> ids;
@@ -103,10 +113,11 @@ void callback(const ImageConstPtr &image_msg) {
     if (ids.empty()) {
         ROS_INFO("Markers not found");
         if (show_detections) {
-            imshow("markers", image);
+            imshow("markers", display_image);
             auto key = waitKey(1);
             if (key == 27) {
-                terminate_flag = true;
+                ROS_INFO("ESC pressed, exit the program");
+                ros::shutdown();
             }
         }
         return;
@@ -123,11 +134,12 @@ void callback(const ImageConstPtr &image_msg) {
 
     // Draw marker poses
     if (show_detections) {
-        aruco::drawDetectedMarkers(image, corners, ids);
-        imshow("markers", image);
+        aruco::drawDetectedMarkers(display_image, corners, ids);
+        imshow("markers", display_image);
         auto key = waitKey(1);
         if (key == 27) {
-            terminate_flag = true;
+            ROS_INFO("ESC pressed, exit the program");
+            ros::shutdown();
         }
     }
 
@@ -189,13 +201,15 @@ int main(int argc, char **argv) {
     nh.param("show_detections", show_detections, true);
     nh.param("tf_prefix", marker_tf_prefix, string("marker"));
     nh.param("marker_size", marker_size, 0.09f);
+    nh.param("enable_blur", enable_blur, true);
+    nh.param("blur_window_size", blur_window_size, 7);
+    detector_params = aruco::DetectorParameters::create();
+    detector_params->cornerRefinementMethod = aruco::CORNER_REFINE_SUBPIX;
     nh.param("aruco_dictionary", dictionary_name, string("DICT_4X4_50"));
+    nh.param("aruco_adaptiveThreshWinSizeStep", detector_params->adaptiveThreshWinSizeStep, 4);
     int queue_size = 10;
 
     // Configure ARUCO marker detector
-    detector_params = aruco::DetectorParameters::create();
-    detector_params->cornerRefinementMethod = aruco::CORNER_REFINE_SUBPIX;
-    detector_params->adaptiveThreshWinSizeStep = 50;
     dictionary = aruco::getPredefinedDictionary(dictionary_names[dictionary_name]);
     ROS_DEBUG("%f", marker_size);
 
@@ -205,18 +219,6 @@ int main(int argc, char **argv) {
     ros::Subscriber rgb_sub = nh.subscribe(rgb_topic.c_str(), queue_size, callback);
     ros::Subscriber rgb_info_sub = nh.subscribe(rgb_info_topic.c_str(), queue_size, callback_camera_info);
 
-    ros::Rate rate(30);
-    while (true) {
-        ros::spinOnce();
-        rate.sleep();
-        // check if the program should still run
-        if (terminate_flag) {
-            ROS_INFO("ESC pressed, exit the program");
-            break;
-        }
-    }
-    if (show_detections) {
-        cv::destroyAllWindows();
-    }
+    ros::spin();
     return 0;
 }
