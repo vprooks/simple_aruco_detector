@@ -39,8 +39,10 @@ Matx33d intrinsic_matrix;
 Ptr<aruco::DetectorParameters> detector_params;
 Ptr<cv::aruco::Dictionary> dictionary;
 string marker_tf_prefix;
+string output_topic;
 int blur_window_size = 7;
 bool enable_blur = true;
+ros::Publisher pub;
 
 void int_handler(int x) {
     // disconnect and exit gracefully
@@ -166,30 +168,29 @@ void callback(const ImageConstPtr &image_msg) {
         tf_msg.transform.rotation.z = transform.getRotation().getZ();
         tf_msg.transform.rotation.w = transform.getRotation().getW();
         br.sendTransform(tf_msg);
+        pub.publish(tf_msg);
     }
 }
 
 int main(int argc, char **argv) {
-    map<string, aruco::PREDEFINED_DICTIONARY_NAME> dictionary_names;
-    dictionary_names.insert(pair<string, aruco::PREDEFINED_DICTIONARY_NAME>("DICT_4X4_50", aruco::DICT_4X4_50));
-    dictionary_names.insert(pair<string, aruco::PREDEFINED_DICTIONARY_NAME>("DICT_4X4_100", aruco::DICT_4X4_100));
-    dictionary_names.insert(pair<string, aruco::PREDEFINED_DICTIONARY_NAME>("DICT_4X4_250", aruco::DICT_4X4_250));
-    dictionary_names.insert(pair<string, aruco::PREDEFINED_DICTIONARY_NAME>("DICT_4X4_1000", aruco::DICT_4X4_1000));
-    dictionary_names.insert(pair<string, aruco::PREDEFINED_DICTIONARY_NAME>("DICT_5X5_50", aruco::DICT_5X5_50));
-    dictionary_names.insert(pair<string, aruco::PREDEFINED_DICTIONARY_NAME>("DICT_5X5_100", aruco::DICT_5X5_100));
-    dictionary_names.insert(pair<string, aruco::PREDEFINED_DICTIONARY_NAME>("DICT_5X5_250", aruco::DICT_5X5_250));
-    dictionary_names.insert(pair<string, aruco::PREDEFINED_DICTIONARY_NAME>("DICT_5X5_1000", aruco::DICT_5X5_1000));
-    dictionary_names.insert(pair<string, aruco::PREDEFINED_DICTIONARY_NAME>("DICT_6X6_50", aruco::DICT_6X6_50));
-    dictionary_names.insert(pair<string, aruco::PREDEFINED_DICTIONARY_NAME>("DICT_6X6_100", aruco::DICT_6X6_100));
-    dictionary_names.insert(pair<string, aruco::PREDEFINED_DICTIONARY_NAME>("DICT_6X6_250", aruco::DICT_6X6_250));
-    dictionary_names.insert(pair<string, aruco::PREDEFINED_DICTIONARY_NAME>("DICT_6X6_1000", aruco::DICT_6X6_1000));
-    dictionary_names.insert(pair<string, aruco::PREDEFINED_DICTIONARY_NAME>("DICT_7X7_50", aruco::DICT_7X7_50));
-    dictionary_names.insert(pair<string, aruco::PREDEFINED_DICTIONARY_NAME>("DICT_7X7_100", aruco::DICT_7X7_100));
-    dictionary_names.insert(pair<string, aruco::PREDEFINED_DICTIONARY_NAME>("DICT_7X7_250", aruco::DICT_7X7_250));
-    dictionary_names.insert(pair<string, aruco::PREDEFINED_DICTIONARY_NAME>("DICT_7X7_1000", aruco::DICT_7X7_1000));
-    dictionary_names.insert(
-            pair<string, aruco::PREDEFINED_DICTIONARY_NAME>("DICT_ARUCO_ORIGINAL", aruco::DICT_ARUCO_ORIGINAL));
-
+    map<string, aruco::PREDEFINED_DICTIONARY_NAME> dictionary_names = {
+            {"DICT_4X4_50",         aruco::DICT_4X4_50},
+            {"DICT_4X4_100",        aruco::DICT_4X4_100},
+            {"DICT_4X4_250",        aruco::DICT_4X4_250},
+            {"DICT_4X4_1000",       aruco::DICT_4X4_1000},
+            {"DICT_5X5_50",         aruco::DICT_5X5_50},
+            {"DICT_5X5_100",        aruco::DICT_5X5_100},
+            {"DICT_5X5_250",        aruco::DICT_5X5_250},
+            {"DICT_5X5_1000",       aruco::DICT_5X5_1000},
+            {"DICT_6X6_50",         aruco::DICT_6X6_50},
+            {"DICT_6X6_100",        aruco::DICT_6X6_100},
+            {"DICT_6X6_250",        aruco::DICT_6X6_250},
+            {"DICT_6X6_1000",       aruco::DICT_6X6_1000},
+            {"DICT_7X7_50",         aruco::DICT_7X7_50},
+            {"DICT_7X7_100",        aruco::DICT_7X7_100},
+            {"DICT_7X7_250",        aruco::DICT_7X7_250},
+            {"DICT_7X7_1000",       aruco::DICT_7X7_1000},
+            {"DICT_ARUCO_ORIGINAL", aruco::DICT_ARUCO_ORIGINAL}};
     signal(SIGINT, int_handler);
 
     // Initalize ROS node
@@ -207,6 +208,7 @@ int main(int argc, char **argv) {
     detector_params->cornerRefinementMethod = aruco::CORNER_REFINE_SUBPIX;
     nh.param("aruco_dictionary", dictionary_name, string("DICT_4X4_50"));
     nh.param("aruco_adaptiveThreshWinSizeStep", detector_params->adaptiveThreshWinSizeStep, 4);
+    nh.param("output_topic", output_topic, string("transforms"));
     int queue_size = 10;
 
     // Configure ARUCO marker detector
@@ -218,6 +220,7 @@ int main(int argc, char **argv) {
     }
     ros::Subscriber rgb_sub = nh.subscribe(rgb_topic.c_str(), queue_size, callback);
     ros::Subscriber rgb_info_sub = nh.subscribe(rgb_info_topic.c_str(), queue_size, callback_camera_info);
+    pub = nh.advertise<geometry_msgs::TransformStamped>(output_topic.c_str(), queue_size);
 
     ros::spin();
     return 0;

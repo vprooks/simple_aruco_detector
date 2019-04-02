@@ -12,6 +12,9 @@
         <param name="tf_prefix" type="string" value="$(arg tf_prefix)"/>
         <param name="show_detections" type="bool" value="$(arg show_detections)"/>
         <param name="marker_size" type="double" value="$(arg marker_size)"/>
-        <param name="dictionary_name" type="string" value="$(arg dictionary_name)"/>
+        <param name="aruco_dictionary" type="string" value="$(arg dictionary_name)"/>
+        <param name="enable_blur" type="bool" value="true"/>
+        <param name="blur_window_size" type="int" value="7"/>
+        <param name="aruco_adaptiveThreshWinSizeStep" type="int" value="1"/>
     </node>
 </launch>
