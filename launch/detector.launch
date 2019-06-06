@@ -5,14 +5,14 @@
     <arg name="tf_prefix" default="marker_id" />
     <arg name="show_detections" default="true" />
     <arg name="marker_size" default="0.09" doc="length of the physical marker's side in meters"/>
-    <arg name="dictionary_name" default="DICT_4X4_50" />
+    <arg name="aruco_dictionary" default="DICT_4X4_50" />
     <node pkg="simple_aruco_detector" type="node" name="simple_aruco_detector" output="screen">
         <param name="camera" type="string" value="$(arg camera)"/>
         <param name="camera_info" type="string" value="$(arg camera_info)"/>
         <param name="tf_prefix" type="string" value="$(arg tf_prefix)"/>
         <param name="show_detections" type="bool" value="$(arg show_detections)"/>
         <param name="marker_size" type="double" value="$(arg marker_size)"/>
-        <param name="aruco_dictionary" type="string" value="$(arg dictionary_name)"/>
+        <param name="aruco_dictionary" type="string" value="$(arg aruco_dictionary)"/>
         <param name="enable_blur" type="bool" value="true"/>
         <param name="blur_window_size" type="int" value="7"/>
         <param name="aruco_adaptiveThreshWinSizeStep" type="int" value="1"/>

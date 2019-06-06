@@ -99,6 +99,7 @@ void callback(const ImageConstPtr &image_msg) {
     string frame_id = image_msg->header.frame_id;
     auto image = cv_bridge::toCvShare(image_msg)->image;
     cv::Mat display_image(image);
+    cv::cvtColor(image, image, cv::COLOR_RGB2BGR);  // TODO: deleteme!!!
 
     // Smooth the image to improve detection results
     if (enable_blur) {
@@ -209,11 +210,10 @@ int main(int argc, char **argv) {
     nh.param("aruco_dictionary", dictionary_name, string("DICT_4X4_50"));
     nh.param("aruco_adaptiveThreshWinSizeStep", detector_params->adaptiveThreshWinSizeStep, 4);
     nh.param("output_topic", output_topic, string("transforms"));
-    int queue_size = 10;
+    int queue_size = 1;
 
     // Configure ARUCO marker detector
     dictionary = aruco::getPredefinedDictionary(dictionary_names[dictionary_name]);
-    ROS_DEBUG("%f", marker_size);
 
     if (show_detections) {
         namedWindow("markers", cv::WINDOW_KEEPRATIO);
